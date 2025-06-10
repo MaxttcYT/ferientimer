@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="de">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Countdown bis 2. Juli 2025, 10:30 Uhr</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        html {
+            --s: 231px;
+            /* control the size*/
+            --c1: #4f4f4f;
+            --c2: #292929;
+
+            --_g: #0000 90deg, var(--c1) 0;
+            background:
+                conic-gradient(from 90deg at 2px 2px, var(--_g)),
+                conic-gradient(from 90deg at 1px 1px, var(--_g)),
+                var(--c2);
+            background-size: var(--s) var(--s), calc(var(--s)/5) calc(var(--s)/5);
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            color: #eee;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+
+
+        .card {
+            padding: 2rem 2.5rem;
+            max-width: 500px;
+            text-align: center;
+            color: #222;
+        }
+
+        h1 {
+            font-weight: 600;
+            font-size: 1.8rem;
+            margin-bottom: 1.5rem;
+            color: #ffffff;
+        }
+
+        p {
+            font-size: 1.15rem;
+            margin: 0.8rem 0;
+            line-height: 1.4;
+            color: white;
+        }
+
+        #arbeitstage {
+            margin-top: 1.6rem;
+            font-weight: 600;
+            color: white;
+        }
+
+    </style>
+</head>
+
+<body>
+    <div class="card">
+        <h1>Countdown bis Sommerferien</h1>
+        <p id="zeit">Berechne verbleibende Zeit…</p>
+        <p id="arbeitstage">Berechne Arbeitstage…</p>
+    </div>
+
+    <script>
+        const zielDatum = new Date("2025-07-02T10:30:00");
+        const startDatum = new Date();
+        const totalTageGesamt = Math.floor((zielDatum - startDatum) / (1000 * 60 * 60 * 24));
+        var feiertageSet;
+
+        async function getFeiertage() {
+            const feiertageResponse = await fetch("https://feiertage-api.de/api/?jahr=2025&nur_land=NI");
+            const feiertageData = await feiertageResponse.json();
+
+            // Werte des Objekts in ein Array umwandeln
+            const feiertageArray = Object.values(feiertageData);
+
+            // Datum extrahieren und als Date-Objekt parsen
+            const feiertage = feiertageArray.map(f => new Date(f.datum));
+
+            // ISO-Daten in einem Set sammeln
+            feiertageSet = new Set(feiertage.map(f => f.toISOString().split("T")[0]));
+        }
+
+        async function updateCountdown() {
+            const jetzt = new Date();
+            let diffMs = zielDatum - jetzt;
+
+            if (diffMs <= 0) {
+                document.getElementById("zeit").textContent = "YIPIIIIIE! ";
+                document.getElementById("arbeitstage").textContent = "";
+                return;
+            }
+
+            const sekunde = 1000, minute = 60 * sekunde, stunde = 60 * minute, tag = 24 * stunde,
+                woche = 7 * tag, monat = 30.4375 * tag;
+
+            let rest = diffMs;
+            const monate = Math.floor(rest / monat); rest %= monat;
+            const wochen = Math.floor(rest / woche); rest %= woche;
+            const tage = Math.floor(rest / tag); rest %= tag;
+            const stunden = Math.floor(rest / stunde); rest %= stunde;
+            const minuten = Math.floor(rest / minute); rest %= minute;
+            const sekunden = Math.floor(rest / sekunde);
+
+            document.getElementById("zeit").innerHTML =
+                `Noch: <br> ${monate} Monate, <br> ${wochen} Wochen, <br> ${tage} Tage, <br> ${stunden} Stunden, ${minuten} Minuten, ${sekunden} Sekunden`;
+
+            const verbleibendeTage = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+
+            let arbeitstage = 0;
+            let datum = new Date(jetzt);
+            datum.setHours(0, 0, 0, 0);
+
+            while (datum < zielDatum) {
+                const tag = datum.getDay();
+                const datumStr = datum.toISOString().split("T")[0];
+
+                if (tag !== 0 && tag !== 6 && !feiertageSet.has(datumStr)) {
+                    arbeitstage++;
+                }
+                datum.setDate(datum.getDate() + 1);
+            }
+
+            const volleWochen = Math.floor(arbeitstage / 5);
+            const restTage = arbeitstage % 5;
+
+            document.getElementById("arbeitstage").innerHTML =
+                `Verbleibende Arbeitstage (Mo–Fr ohne Feiertage (inklusive So u. Sa) ): <br> ${arbeitstage} (${volleWochen} volle Wochen und ${restTage} Tag(e))`;
+        }
+
+        getFeiertage().then(() => {
+            updateCountdown();
+            setInterval(updateCountdown, 1000);
+        }).catch(error => {
+            alert("Fehler beim Laden der Feiertage:", error);
+        });
+    </script>
+</body>
+
+</html>
