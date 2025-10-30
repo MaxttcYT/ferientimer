@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8" />
-    <title>Countdown bis 2. Juli 2025, 10:30 Uhr</title>
+    <title>Countdown FERIEN!</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
         html {
@@ -63,13 +63,14 @@
 
 <body>
     <div class="card">
-        <h1>Countdown bis Sommerferien</h1>
+        <h1>Countdown bis Weinachtsferien</h1>
         <p id="zeit">Berechne verbleibende Zeit…</p>
         <p id="arbeitstage">Berechne Arbeitstage…</p>
     </div>
 
     <script>
-        const zielDatum = new Date("2025-07-02T10:30:00");
+      const zielDatum = new Date("2025-12-22T10:30:00");
+
         const startDatum = new Date();
         const totalTageGesamt = Math.floor((zielDatum - startDatum) / (1000 * 60 * 60 * 24));
         var feiertageSet;
@@ -144,5 +145,6 @@
         });
     </script>
 </body>
+
 
 </html>
